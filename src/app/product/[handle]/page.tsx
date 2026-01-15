@@ -1,13 +1,15 @@
 
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { ShoppingBag, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { ShieldCheck, Truck, RotateCcw } from 'lucide-react';
 import ProductCard from '@/src/components/product/product-card';
+import AddToCartButton from '@/src/components/product/add-to-cart-button';
 import { formatPrice } from '@/src/lib/utils';
 import { getProduct, getProducts } from '@/src/lib/shopify';
 
-export default async function ProductPage({ params }: { params: { handle: string } }) {
-    const product = await getProduct(params.handle);
+export default async function ProductPage({ params }: { params: Promise<{ handle: string }> }) {
+    const { handle } = await params;
+    const product = await getProduct(handle);
 
     if (!product) {
         notFound();
@@ -38,13 +40,13 @@ export default async function ProductPage({ params }: { params: { handle: string
                         </div>
                     </div>
 
-                    <div className="aspect-square w-full overflow-hidden rounded-2xl bg-neutral-100">
+                    <div className="relative w-full max-h-[600px] aspect-square overflow-hidden rounded-2xl bg-neutral-100">
                         {product.featuredImage && (
                             <Image
                                 src={product.featuredImage.url}
                                 alt={product.featuredImage.altText || product.title}
                                 fill
-                                className="object-cover"
+                                className="object-contain p-4"
                                 priority
                             />
                         )}
@@ -92,14 +94,11 @@ export default async function ProductPage({ params }: { params: { handle: string
                             </div>
                         ))}
 
-                        <div className="mt-10 flex gap-4">
-                            <button
-                                type="button"
-                                className="flex flex-1 items-center justify-center rounded-full bg-neutral-900 px-8 py-4 text-base font-medium text-white hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 transition-colors"
-                            >
-                                <ShoppingBag className="mr-2 h-5 w-5" />
-                                Add to Cart
-                            </button>
+                        <div className="mt-10">
+                            <AddToCartButton
+                                variants={product.variants as any}
+                                availableForSale={product.availableForSale}
+                            />
                         </div>
                     </div>
 

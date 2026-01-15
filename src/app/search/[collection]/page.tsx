@@ -5,16 +5,17 @@ export default async function CollectionPage({
     params,
     searchParams
 }: {
-    params: { collection: string };
-    searchParams?: { [key: string]: string | string[] | undefined };
+    params: Promise<{ collection: string }>;
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const collection = await getCollection(params.collection);
+    const { collection: collectionHandle } = await params;
+    const collection = await getCollection(collectionHandle);
 
     // If collection is 'all' or not found, we might want to show all products
     // For this template, we'll just fetch products for the collection
-    const products = await getCollectionProducts({ collection: params.collection });
+    const products = await getCollectionProducts({ collection: collectionHandle });
 
-    if (!collection && params.collection !== 'all') {
+    if (!collection && collectionHandle !== 'all') {
         // If it's not 'all' and not found, 404
         // But for a template, let's be more forgiving or handle 'all'
     }

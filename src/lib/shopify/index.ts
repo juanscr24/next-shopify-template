@@ -57,6 +57,9 @@ export async function shopifyFetch<T>({
         const body = await result.json();
 
         if (body.errors) {
+            console.error('Shopify GraphQL Error:', body.errors);
+            console.error('Query:', query);
+            console.error('Variables:', variables);
             throw body.errors[0];
         }
 
@@ -91,12 +94,7 @@ export async function getProducts({
     sortKey?: string;
 } = {}): Promise<Product[]> {
     const res = await shopifyFetch<ShopifyProductsOperation>({
-        query: getProductsQuery,
-        variables: {
-            query,
-            reverse,
-            sortKey
-        }
+        query: getProductsQuery
     });
 
     return reshapeProducts(removeEdgesAndNodes(res.body.data.products));
@@ -144,11 +142,7 @@ export async function getCollectionProducts({
 }): Promise<Product[]> {
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
         query: getCollectionProductsQuery,
-        variables: {
-            handle: collection,
-            reverse,
-            sortKey
-        }
+        variables: { handle: collection }
     });
 
     if (!res.body.data.collection) {
@@ -200,7 +194,7 @@ export async function removeFromCart(cartId: string, lineIds: string[]): Promise
 
 export async function updateCart(
     cartId: string,
-    lines: { id: string; merchandiseId: string; quantity: number }[]
+    lines: { id: string; quantity: number }[]
 ): Promise<Cart> {
     const res = await shopifyFetch<ShopifyUpdateCartOperation>({
         query: updateCartMutation,
@@ -314,9 +308,9 @@ const getCollectionQuery = `
 `;
 
 const getCollectionProductsQuery = `
-  query getCollectionProducts($handle: String!, $reverse: Boolean, $sortKey: String) {
+  query getCollectionProducts($handle: String!) {
     collection(handle: $handle) {
-      products(first: 100, reverse: $reverse, sortKey: $sortKey) {
+      products(first: 100) {
         edges {
           node {
             id
@@ -387,8 +381,8 @@ const getCollectionProductsQuery = `
 `;
 
 const getProductsQuery = `
-  query getProducts($query: String, $reverse: Boolean, $sortKey: String) {
-    products(first: 100, query: $query, reverse: $reverse, sortKey: $sortKey) {
+  query getProducts {
+    products(first: 100) {
       edges {
         node {
           id
@@ -584,8 +578,8 @@ const getCartQuery = `
 `;
 
 const createCartMutation = `
-  mutation createCart($lineItems: [CartLineInput]) {
-    cartCreate(input: { lines: $lineItems }) {
+  mutation createCart {
+    cartCreate {
       cart {
         id
         checkoutUrl
